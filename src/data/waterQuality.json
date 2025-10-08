@@ -1,0 +1,100 @@
+{
+  "cities": [
+    {
+      "name": "Mumbai",
+      "state": "Maharashtra",
+      "waterQuality": {
+        "ph": 7.2,
+        "tds": 450,
+        "hardness": 280,
+        "chlorine": 0.3,
+        "rating": "Good",
+        "description": "Water quality is within safe limits for consumption"
+      }
+    },
+    {
+      "name": "Delhi",
+      "state": "Delhi",
+      "waterQuality": {
+        "ph": 7.5,
+        "tds": 520,
+        "hardness": 310,
+        "chlorine": 0.4,
+        "rating": "Moderate",
+        "description": "Water quality is acceptable but may require filtration"
+      }
+    },
+    {
+      "name": "Bangalore",
+      "state": "Karnataka",
+      "waterQuality": {
+        "ph": 7.0,
+        "tds": 380,
+        "hardness": 240,
+        "chlorine": 0.25,
+        "rating": "Excellent",
+        "description": "Water quality meets all safety standards"
+      }
+    },
+    {
+      "name": "Hyderabad",
+      "state": "Telangana",
+      "waterQuality": {
+        "ph": 7.3,
+        "tds": 420,
+        "hardness": 260,
+        "chlorine": 0.3,
+        "rating": "Good",
+        "description": "Water quality is safe for consumption"
+      }
+    },
+    {
+      "name": "Chennai",
+      "state": "Tamil Nadu",
+      "waterQuality": {
+        "ph": 7.8,
+        "tds": 680,
+        "hardness": 380,
+        "chlorine": 0.5,
+        "rating": "Poor",
+        "description": "Water quality needs improvement, filtration recommended"
+      }
+    },
+    {
+      "name": "Kolkata",
+      "state": "West Bengal",
+      "waterQuality": {
+        "ph": 7.1,
+        "tds": 490,
+        "hardness": 290,
+        "chlorine": 0.35,
+        "rating": "Moderate",
+        "description": "Water quality is acceptable with minor concerns"
+      }
+    },
+    {
+      "name": "Pune",
+      "state": "Maharashtra",
+      "waterQuality": {
+        "ph": 7.2,
+        "tds": 410,
+        "hardness": 250,
+        "chlorine": 0.28,
+        "rating": "Good",
+        "description": "Water quality is within safe parameters"
+      }
+    },
+    {
+      "name": "Ahmedabad",
+      "state": "Gujarat",
+      "waterQuality": {
+        "ph": 7.6,
+        "tds": 550,
+        "hardness": 320,
+        "chlorine": 0.42,
+        "rating": "Moderate",
+        "description": "Water quality requires occasional monitoring"
+      }
+    }
+  ]
+}

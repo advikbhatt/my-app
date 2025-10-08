@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Health Platform Design System */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    /* Medical Blue - Trust & Professional */
+    --primary: 210 90% 48%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 210 85% 92%;
+    --primary-glow: 210 90% 65%;
+
+    /* Fresh Green - Health & Wellness */
+    --secondary: 145 63% 42%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 145 60% 90%;
+
+    /* Premium Gold */
+    --premium: 45 93% 47%;
+    --premium-foreground: 215 25% 15%;
+    --premium-light: 45 90% 90%;
+
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 15% 45%;
+
+    --accent: 210 90% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 210 90% 48%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(210 90% 48%), hsl(210 90% 65%));
+    --gradient-secondary: linear-gradient(135deg, hsl(145 63% 42%), hsl(145 63% 55%));
+    --gradient-premium: linear-gradient(135deg, hsl(45 93% 47%), hsl(45 93% 65%));
+    --gradient-hero: linear-gradient(135deg, hsl(210 90% 48%) 0%, hsl(145 63% 42%) 100%);
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px hsl(210 20% 20% / 0.08);
+    --shadow-medium: 0 4px 16px hsl(210 20% 20% / 0.12);
+    --shadow-premium: 0 8px 24px hsl(45 93% 47% / 0.25);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 215 25% 15%;
+    --sidebar-primary: 210 90% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 95%;
+    --sidebar-accent-foreground: 215 25% 15%;
+    --sidebar-border: 210 20% 90%;
+    --sidebar-ring: 210 90% 48%;
+  }
+
+  .dark {
+    --background: 215 30% 8%;
+    --foreground: 210 20% 98%;
+
+    --card: 215 28% 12%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 215 28% 12%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 210 90% 55%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 210 90% 20%;
+    --primary-glow: 210 90% 65%;
+
+    --secondary: 145 60% 45%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 145 60% 18%;
+
+    --premium: 45 90% 55%;
+    --premium-foreground: 215 30% 8%;
+    --premium-light: 45 90% 20%;
+
+    --muted: 215 25% 15%;
+    --muted-foreground: 210 15% 60%;
+
+    --accent: 210 90% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 18%;
+    --input: 215 25% 18%;
+    --ring: 210 90% 55%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(210 90% 55%), hsl(210 90% 70%));
+    --gradient-secondary: linear-gradient(135deg, hsl(145 60% 45%), hsl(145 60% 58%));
+    --gradient-premium: linear-gradient(135deg, hsl(45 90% 55%), hsl(45 90% 70%));
+    --gradient-hero: linear-gradient(135deg, hsl(210 90% 55%) 0%, hsl(145 60% 45%) 100%);
+
+    --shadow-soft: 0 2px 8px hsl(0 0% 0% / 0.3);
+    --shadow-medium: 0 4px 16px hsl(0 0% 0% / 0.4);
+    --shadow-premium: 0 8px 24px hsl(45 90% 55% / 0.35);
+
+    --sidebar-background: 215 30% 10%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 210 90% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 15%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 215 25% 18%;
+    --sidebar-ring: 210 90% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
