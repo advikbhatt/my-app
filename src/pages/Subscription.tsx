@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Crown, Check, ArrowLeft } from "lucide-react";
 import type { User } from '@supabase/supabase-js';
 
+const EDGE_FUNCTION_URL = "https://gdkpsgoisbvqecjbfuef.functions.supabase.co/airpay-payment";
+
 const Subscription = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
@@ -14,50 +16,64 @@ const Subscription = () => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUser(session.user);
-      }
+      if (!session) navigate("/auth");
+      else setUser(session.user);
     });
   }, [navigate]);
+const initiatePayment = async () => {
+  if (!user || processing) return;
+  setProcessing(true);
 
-  const initiatePayment = () => {
-    if (!user || processing) return;
-    
-    setProcessing(true);
-    
-    const airpayPublicKey = import.meta.env.VITE_AIRPAY_PUBLIC_KEY;
-    
-    if (!airpayPublicKey) {
-      toast.error("Payment configuration error. Please contact support.");
-      setProcessing(false);
-      return;
-    }
+  try {
+    const orderId = `ORD-${Date.now()}`;
+    const amount = 85;
 
-    try {
-      const currentUrl = window.location.origin;
-      
-      // @ts-ignore - AirPay is loaded via script tag
-      window.AirPay.launch(airpayPublicKey, {
-        order: {
-          amount: 85,
-          currency: 'inr',
-          name: 'Premium Membership',
-          description: 'One month access to AI-powered health reports',
-          quantity: 1,
-        },
-        redirect_urls: {
-          success: `${currentUrl}/payment/success`,
-          failure: `${currentUrl}/payment/failure`
-        }
-      });
-    } catch (error: any) {
-      console.error('Payment error:', error);
-      toast.error(error.message || "Failed to initiate payment");
-      setProcessing(false);
-    }
-  };
+    // Call Supabase Edge Function
+    const res = await fetch("https://gdkpsgoisbvqecjbfuef.functions.supabase.co/airpay-payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        buyerEmail: user.email,
+        buyerFirstName: user.user_metadata.full_name?.split(" ")[0] || "John",
+        buyerLastName: user.user_metadata.full_name?.split(" ")[1] || "Doe",
+        amount,
+        orderid: orderId,
+        currency: "INR",
+        isocurrency: "INR",
+      }),
+    });
+
+    const data = await res.json();
+    if (!data.paymentUrl) throw new Error("Failed to get payment URL");
+
+    // Create a form and POST to AirPay
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = data.paymentUrl;
+
+    const inputs = [
+      { name: "merchant_id", value: data.merchantId },
+      { name: "encdata", value: data.encryptedData },
+      { name: "checksum", value: data.checksum },
+    ];
+
+    inputs.forEach(({ name, value }) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  } catch (err: any) {
+    console.error("Payment initiation error:", err);
+    toast.error(err.message || "Failed to initiate payment");
+    setProcessing(false);
+  }
+};
+
 
   const features = [
     "Personalized AI health reports",
@@ -87,9 +103,7 @@ const Subscription = () => {
               <Crown className="w-10 h-10 text-premium-foreground" />
             </div>
             <h2 className="text-4xl font-bold text-foreground mb-2">Premium Membership</h2>
-            <p className="text-lg text-muted-foreground">
-              Unlock personalized health insights powered by AI
-            </p>
+            <p className="text-lg text-muted-foreground">Unlock personalized health insights powered by AI</p>
           </div>
 
           <div className="bg-primary-light rounded-2xl p-8 mb-8 text-center">
@@ -100,8 +114,8 @@ const Subscription = () => {
 
           <div className="space-y-4 mb-8">
             <h3 className="font-semibold text-lg text-foreground mb-4">What you'll get:</h3>
-            {features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-3">
+            {features.map((feature, i) => (
+              <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 bg-secondary-light rounded-full flex items-center justify-center flex-shrink-0">
                   <Check className="w-4 h-4 text-secondary" />
                 </div>
@@ -120,9 +134,7 @@ const Subscription = () => {
             {processing ? "Processing..." : "Subscribe Now"}
           </Button>
 
-          <p className="text-sm text-muted-foreground text-center mt-6">
-            Secure payment powered by Airpay
-          </p>
+          <p className="text-sm text-muted-foreground text-center mt-6">Secure payment powered by AirPay</p>
         </Card>
       </main>
     </div>

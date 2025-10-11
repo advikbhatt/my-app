@@ -42,3 +42,25 @@ entrypoint = "./functions/airpay-verify/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/airpay-verify/*.html" ]
+
+[functions.airpay-payment]
+enabled = true
+verify_jwt = true
+import_map = "./functions/airpay-payment/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/airpay-payment/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/airpay-payment/*.html" ]
+
+[functions.airpay-response]
+enabled = true
+verify_jwt = true
+import_map = "./functions/airpay-response/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/airpay-response/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/airpay-response/*.html" ]
