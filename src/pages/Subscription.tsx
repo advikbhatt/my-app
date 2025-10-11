@@ -25,10 +25,6 @@ const initiatePayment = async () => {
   setProcessing(true);
 
   try {
-    const orderId = `ORD-${Date.now()}`;
-    const amount = 85;
-
-    // Call Supabase Edge Function
     const res = await fetch("https://gdkpsgoisbvqecjbfuef.functions.supabase.co/airpay-payment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -36,8 +32,8 @@ const initiatePayment = async () => {
         buyerEmail: user.email,
         buyerFirstName: user.user_metadata.full_name?.split(" ")[0] || "John",
         buyerLastName: user.user_metadata.full_name?.split(" ")[1] || "Doe",
-        amount,
-        orderid: orderId,
+        amount: 85,
+        orderid: `ORD-${Date.now()}`,
         currency: "INR",
         isocurrency: "INR",
       }),
@@ -46,30 +42,30 @@ const initiatePayment = async () => {
     const data = await res.json();
     if (!data.paymentUrl) throw new Error("Failed to get payment URL");
 
-    // Create a form and POST to AirPay
+    // Create form dynamically
     const form = document.createElement("form");
     form.method = "POST";
     form.action = data.paymentUrl;
 
-    const inputs = [
-      { name: "merchant_id", value: data.merchantId },
-      { name: "encdata", value: data.encryptedData },
-      { name: "checksum", value: data.checksum },
-    ];
+    const fields = {
+      encdata: data.encryptedData,
+      checksum: data.checksum,
+      merchant_id: data.merchantId,
+    };
 
-    inputs.forEach(({ name, value }) => {
+    for (const [key, value] of Object.entries(fields)) {
       const input = document.createElement("input");
       input.type = "hidden";
-      input.name = name;
-      input.value = value;
+      input.name = key;
+      input.value = value as string;
       form.appendChild(input);
-    });
+    }
 
     document.body.appendChild(form);
     form.submit();
-  } catch (err: any) {
-    console.error("Payment initiation error:", err);
-    toast.error(err.message || "Failed to initiate payment");
+  } catch (error: any) {
+    console.error("Payment initiation error:", error);
+    toast.error(error.message || "Failed to initiate payment");
     setProcessing(false);
   }
 };
