@@ -9,6 +9,17 @@ import { toast } from "sonner";
 import { ArrowLeft, Droplets, Wind, Loader2 } from "lucide-react";
 import waterData from "@/data/waterQuality.json";
 
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from "recharts";
+
 interface PollutionData {
   aqi: number;
   aqiLabel: string;
@@ -25,12 +36,21 @@ interface PollutionData {
   };
 }
 
+const WHO_LIMITS = {
+  pm2_5: 15,
+  pm10: 45,
+  no2: 25,
+  o3: 100,
+  so2: 40,
+};
+
 const EnvironmentalData = () => {
   const navigate = useNavigate();
   const [selectedCity, setSelectedCity] = useState("");
   const [waterQuality, setWaterQuality] = useState<any>(null);
   const [pollutionData, setPollutionData] = useState<PollutionData | null>(null);
   const [loadingPollution, setLoadingPollution] = useState(false);
+  const [historicalData, setHistoricalData] = useState<any[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -67,6 +87,8 @@ const EnvironmentalData = () => {
           if (error) throw error;
 
           setPollutionData(data);
+
+
           setLoadingPollution(false);
         },
         (error) => {
@@ -91,6 +113,26 @@ const EnvironmentalData = () => {
       case 5: return "text-destructive";
       default: return "text-muted-foreground";
     }
+  };
+
+  const renderPollutantComparison = () => {
+    if (!pollutionData) return null;
+    return (
+      <div className="space-y-2 mt-4">
+        {Object.keys(WHO_LIMITS).map((key) => {
+          const value = (pollutionData.components as any)[key];
+          const limit = (WHO_LIMITS as any)[key];
+          return (
+            <div key={key} className="flex justify-between items-center p-2 bg-card border border-border rounded-lg">
+              <div className="capitalize">{key.replace("_", ".")}</div>
+              <div className={`font-semibold ${value > limit ? "text-red-600" : "text-green-600"}`}>
+                {value.toFixed(1)} / {limit} (WHO)
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -196,38 +238,58 @@ const EnvironmentalData = () => {
             </Button>
 
             {pollutionData && (
-              <div className="space-y-4">
-                <div className="p-4 bg-secondary-light rounded-lg">
-                  <div className="text-sm font-medium text-muted-foreground mb-1">Air Quality Index</div>
-                  <div className={`text-2xl font-bold ${getAqiColor(pollutionData.aqi)}`}>
-                    {pollutionData.aqiLabel}
-                  </div>
-                </div>
-
-                <div className="text-sm text-muted-foreground">{pollutionData.description}</div>
-
-                <div className="space-y-2">
-                  <div className="text-sm font-semibold text-foreground mb-2">Pollutant Levels</div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-card border border-border rounded-lg">
-                      <div className="text-xs text-muted-foreground mb-1">PM2.5 (μg/m³)</div>
-                      <div className="text-lg font-semibold text-foreground">{pollutionData.components.pm2_5.toFixed(1)}</div>
-                    </div>
-                    <div className="p-3 bg-card border border-border rounded-lg">
-                      <div className="text-xs text-muted-foreground mb-1">PM10 (μg/m³)</div>
-                      <div className="text-lg font-semibold text-foreground">{pollutionData.components.pm10.toFixed(1)}</div>
-                    </div>
-                    <div className="p-3 bg-card border border-border rounded-lg">
-                      <div className="text-xs text-muted-foreground mb-1">NO₂ (μg/m³)</div>
-                      <div className="text-lg font-semibold text-foreground">{pollutionData.components.no2.toFixed(1)}</div>
-                    </div>
-                    <div className="p-3 bg-card border border-border rounded-lg">
-                      <div className="text-xs text-muted-foreground mb-1">O₃ (μg/m³)</div>
-                      <div className="text-lg font-semibold text-foreground">{pollutionData.components.o3.toFixed(1)}</div>
+              <>
+                <div className="space-y-4">
+                  <div className="p-4 bg-secondary-light rounded-lg">
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Air Quality Index</div>
+                    <div className={`text-2xl font-bold ${getAqiColor(pollutionData.aqi)}`}>
+                      {pollutionData.aqiLabel}
                     </div>
                   </div>
+
+                  <div className="text-sm text-muted-foreground">{pollutionData.description}</div>
+
+                  <div className="space-y-2">
+                    <div className="text-sm font-semibold text-foreground mb-2">Pollutant Levels</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.entries(pollutionData.components).map(([key, value]) => (
+                        <div key={key} className="p-3 bg-card border border-border rounded-lg">
+                          <div className="text-xs text-muted-foreground mb-1">{key.toUpperCase()}</div>
+                          <div className="text-lg font-semibold text-foreground">{(value as number).toFixed(1)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <h3 className="text-lg font-bold mb-2">WHO Guideline Comparison</h3>
+                    {renderPollutantComparison()}
+                  </div>
+
+                  {historicalData.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-bold mb-2">7-Day Pollution Trend</h3>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={historicalData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="day" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="pm2_5" name="PM2.5" stroke="#8884d8" />
+                          <Line type="monotone" dataKey="pm10" name="PM10" stroke="#82ca9d" />
+                          <Line type="monotone" dataKey="no2" name="NO2" stroke="#ff7300" />
+                          <Line type="monotone" dataKey="o3" name="O3" stroke="#387908" />
+                          <Line type="monotone" dataKey={() => WHO_LIMITS.pm2_5} name="WHO PM2.5" stroke="#8884d8" strokeDasharray="5 5" dot={false} />
+                          <Line type="monotone" dataKey={() => WHO_LIMITS.pm10} name="WHO PM10" stroke="#82ca9d" strokeDasharray="5 5" dot={false} />
+                          <Line type="monotone" dataKey={() => WHO_LIMITS.no2} name="WHO NO2" stroke="#ff7300" strokeDasharray="5 5" dot={false} />
+                          <Line type="monotone" dataKey={() => WHO_LIMITS.o3} name="WHO O3" stroke="#387908" strokeDasharray="5 5" dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </>
             )}
           </Card>
         </div>
