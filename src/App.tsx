@@ -13,6 +13,9 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
 import NotFound from "./pages/NotFound";
 
+import AirPollutionPage from "./pages/AirPollutionPage";
+import WaterQualityPage from "./pages/WaterQualityPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -28,6 +31,10 @@ const App = () => (
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/health-report" element={<HealthReport />} />
           <Route path="/environmental-data" element={<EnvironmentalData />} />
+          <Route path="/air-pollution" element={<AirPollutionPage />} />
+          <Route path="/water-quality" element={<WaterQualityPage />} />
+
+
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/failure" element={<PaymentFailure />} />
           <Route path="*" element={<NotFound />} />

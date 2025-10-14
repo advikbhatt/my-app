@@ -108,14 +108,14 @@ const Dashboard = () => {
             Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}!
           </h2>
           <p className="text-muted-foreground">
-            {isPremium 
-              ? "Access all premium features to optimize your health" 
+            {isPremium
+              ? "Access all premium features to optimize your health"
               : "Upgrade to Premium for personalized health reports"}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="p-6 hover:shadow-medium transition-shadow cursor-pointer" onClick={() => navigate("/environmental-data")}>
+          <Card className="p-6 hover:shadow-medium transition-shadow cursor-pointer" onClick={() => navigate("/water-quality")}>
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center">
                 <Droplets className="w-6 h-6 text-primary" />
@@ -130,7 +130,10 @@ const Dashboard = () => {
             </p>
           </Card>
 
-          <Card className="p-6 hover:shadow-medium transition-shadow cursor-pointer" onClick={() => navigate("/environmental-data")}>
+          <Card
+            className="p-6 hover:shadow-medium transition-shadow cursor-pointer"
+            onClick={() => navigate("/air-pollution")}
+          >
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-secondary-light rounded-xl flex items-center justify-center">
                 <Wind className="w-6 h-6 text-secondary" />
@@ -145,8 +148,9 @@ const Dashboard = () => {
             </p>
           </Card>
 
-          <Card 
-            className={`p-6 hover:shadow-medium transition-shadow cursor-pointer ${!isPremium && 'opacity-60'}`} 
+
+          <Card
+            className={`p-6 hover:shadow-medium transition-shadow cursor-pointer ${!isPremium && 'opacity-60'}`}
             onClick={() => isPremium ? navigate("/health-report") : navigate("/subscription")}
           >
             <div className="flex items-center gap-4 mb-4">
@@ -161,7 +165,7 @@ const Dashboard = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              {isPremium 
+              {isPremium
                 ? "Get personalized health recommendations"
                 : "Upgrade to access personalized health reports"}
             </p>
