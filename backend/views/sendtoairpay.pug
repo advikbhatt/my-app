@@ -1,0 +1,70 @@
+doctype html
+html
+  head
+    title= title
+    script.
+     setTimeout(function(){
+         document.getElementById("sendtoairpay").submit();
+     }, 1000);
+
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
+
+  .main.container
+    .row
+      .col-md-12
+        table(width="100%")
+          tr  
+            td(align="center" valign="middle") 
+              h1.display-4.m-b-2 Do Not Refresh or Press Back <br/> Redirecting to Airpay
+              
+        // register form
+        form(method='POST' action= URL  id='sendtoairpay')
+          div.form-group
+            input#privatekey.form-control(type='hidden',  name='privatekey' value=privatekey)
+          div.form-group
+            input#buyerPhone.form-control(type='hidden',  name='merchant_id' value=mid)
+          div.form-group
+            input#checksum.form-control(type='hidden',  name='checksum' value=checksum)
+          div.form-group
+            input#checksum.form-control(type='hidden',  name='encdata' value=data)
+          div.form-group
+            input#chmod.form-control(type='hidden',  name='chmod' value='')
+          
+          
+        //  div.form-group
+            input#orderid.form-control(type='hidden',  name='orderid' value=data.orderid)
+          div.form-group
+            input#currency.form-control(type='hidden',  name='currency' value='834')
+          div.form-group
+            input#isocurrency.form-control(type='hidden',  name='isocurrency' value='TZS')
+          div.form-group
+            input#chmod.form-control(type='hidden',  name='chmod' value='')
+          div.form-group
+            input#buyerEmail.form-control(type='hidden',  name='buyerEmail' value=data.buyerEmail)
+          div.form-group
+            input#buyerPhone.form-control(type='hidden',  name='buyerPhone' value=data.buyerPhone)
+          div.form-group
+            input#buyerFirstName.form-control(type='hidden',  name='buyerFirstName' value=data.buyerFirstName)
+          div.form-group
+            input#buyerLastName.form-control(type='hidden',  name='buyerLastName' value=data.buyerLastName)
+          div.form-group
+            input#buyerAddress.form-control(type='hidden',  name='buyerAddress' value=data.buyerAddress)
+          div.form-group
+            input#buyerCity.form-control(type='hidden',  name='buyerCity' value=data.buyerCity)
+          div.form-group
+            input#buyerState.form-control(type='hidden',  name='buyerState' value=data.buyerState)
+          div.form-group
+            input#buyerCountry.form-control(type='hidden',  name='buyerCountry' value=data.buyerCountry)
+          div.form-group
+            input#buyerPinCode.form-control(type='hidden',  name='buyerPinCode' value=data.buyerPinCode)
+          div.form-group
+            input#orderid.form-control(type='hidden',  name='orderid' value=data.orderid)
+          div.form-group
+            input#amount.form-control(type='hidden',  name='amount' value=data.amount)
+             div.form-group
+            input#txnsubtype.form-control(type='hidden',  name='txnsubtype' value=data.txnsubtype)
+      
+
+          
+

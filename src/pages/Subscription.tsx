@@ -5,9 +5,10 @@ import { Button } from "@/components/Button Variants";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Crown, Check, ArrowLeft } from "lucide-react";
-import type { User } from '@supabase/supabase-js';
+import type { User } from "@supabase/supabase-js";
 
-const EDGE_FUNCTION_URL = "https://gdkpsgoisbvqecjbfuef.functions.supabase.co/airpay-payment";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BACKEND_URL = `${API_BASE_URL}/sendtoairpay`;
 
 const Subscription = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const Subscription = () => {
       else setUser(session.user);
     });
   }, [navigate]);
+
 const initiatePayment = async () => {
   if (!user || processing) return;
   setProcessing(true);
@@ -28,14 +30,30 @@ const initiatePayment = async () => {
     const orderId = `ORD-${Date.now()}`;
     const amount = 85;
 
-    // Call Supabase Edge Function
-    const res = await fetch("https://gdkpsgoisbvqecjbfuef.functions.supabase.co/airpay-payment", {
+    const fullName = user.user_metadata?.full_name || "John Doe";
+    const [firstName, ...lastNameParts] = fullName.split(" ");
+    const lastName = lastNameParts.join(" ") || "Doe";
+
+    const address = user.user_metadata?.address || "";
+    const city = user.user_metadata?.city || "";
+    const state = user.user_metadata?.state || "";
+    const country = user.user_metadata?.country || "India";
+    const phone = user.user_metadata?.phone || "";
+    const pin = user.user_metadata?.pincode || "";
+
+    const response = await fetch(BACKEND_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         buyerEmail: user.email,
-        buyerFirstName: user.user_metadata.full_name?.split(" ")[0] || "John",
-        buyerLastName: user.user_metadata.full_name?.split(" ")[1] || "Doe",
+        buyerFirstName: firstName,
+        buyerLastName: lastName,
+        buyerAddress: address,
+        buyerCity: city,
+        buyerState: state,
+        buyerCountry: country,
+        buyerPhone: phone,
+        buyerPinCode: pin,
         amount,
         orderid: orderId,
         currency: "INR",
@@ -43,33 +61,27 @@ const initiatePayment = async () => {
       }),
     });
 
-    const data = await res.json();
-    if (!data.paymentUrl) throw new Error("Failed to get payment URL");
+    const html = await response.text();
 
-    // Create a form and POST to AirPay
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = data.paymentUrl;
+    if (!response.ok) {
+      console.error("Payment server returned an error:", html);
+      throw new Error("Payment server returned an error");
+    }
 
-    const inputs = [
-      { name: "merchant_id", value: data.merchantId },
-      { name: "encdata", value: data.encryptedData },
-      { name: "checksum", value: data.checksum },
-    ];
+    const newWindow = window.open("", "_blank");
+    if (newWindow) {
+      newWindow.document.write(html);
+      newWindow.document.close();
+    } else {
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      window.location.href = url;
+    }
 
-    inputs.forEach(({ name, value }) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
-    form.submit();
-  } catch (err: any) {
-    console.error("Payment initiation error:", err);
-    toast.error(err.message || "Failed to initiate payment");
+    setProcessing(false);
+  } catch (error: any) {
+    console.error("Payment initiation error:", error);
+    toast.error(error.message || "Payment failed to start");
     setProcessing(false);
   }
 };
@@ -82,11 +94,12 @@ const initiatePayment = async () => {
     "Lifestyle improvement tips",
     "Preventive care suggestions",
     "Priority support",
-    "Monthly health tracking"
+    "Monthly health tracking",
   ];
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
       <header className="border-b border-border bg-card shadow-soft">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
@@ -96,6 +109,7 @@ const initiatePayment = async () => {
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="container mx-auto px-4 py-12 flex justify-center">
         <Card className="max-w-2xl w-full p-8">
           <div className="text-center mb-8">
@@ -103,7 +117,9 @@ const initiatePayment = async () => {
               <Crown className="w-10 h-10 text-premium-foreground" />
             </div>
             <h2 className="text-4xl font-bold text-foreground mb-2">Premium Membership</h2>
-            <p className="text-lg text-muted-foreground">Unlock personalized health insights powered by AI</p>
+            <p className="text-lg text-muted-foreground">
+              Unlock personalized health insights powered by AI
+            </p>
           </div>
 
           <div className="bg-primary-light rounded-2xl p-8 mb-8 text-center">
@@ -134,7 +150,9 @@ const initiatePayment = async () => {
             {processing ? "Processing..." : "Subscribe Now"}
           </Button>
 
-          <p className="text-sm text-muted-foreground text-center mt-6">Secure payment powered by AirPay</p>
+          <p className="text-sm text-muted-foreground text-center mt-6">
+            Secure payment powered by AirPay
+          </p>
         </Card>
       </main>
     </div>

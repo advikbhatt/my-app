@@ -9,10 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import Subscription from "./pages/Subscription";
 import HealthReport from "./pages/HealthReport";
 import EnvironmentalData from "./pages/EnvironmentalData";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentFailure from "./pages/PaymentFailure";
 import NotFound from "./pages/NotFound";
-
+import PaymentStatus from "./pages/PaymentStatus";
 import AirPollutionPage from "./pages/AirPollutionPage";
 import WaterQualityPage from "./pages/WaterQualityPage";
 
@@ -33,10 +31,9 @@ const App = () => (
           <Route path="/environmental-data" element={<EnvironmentalData />} />
           <Route path="/air-pollution" element={<AirPollutionPage />} />
           <Route path="/water-quality" element={<WaterQualityPage />} />
+          <Route path="/payment-status" element={<PaymentStatus />} />
 
 
-          <Route path="/payment/success" element={<PaymentSuccess />} />
-          <Route path="/payment/failure" element={<PaymentFailure />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
