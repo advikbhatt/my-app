@@ -16,7 +16,9 @@ var username = process.env.AIRPAY_USERNAME;
 var password = process.env.AIRPAY_PASSWORD;
 var clientid = process.env.AIRPAY_CLIENT_ID;
 var clientsecret = process.env.AIRPAY_CLIENT_SECRET;
-//var URL = 'https://payments.airpay.co.in/pay/v4/index.php';
+var URL = 'https://payments.airpay.co.in/pay/v4/index.php';
+// var URL = 'https://payments.airpay.co.in/pay/v4/index.php';
+
 const tokenUrl = "https://kraken.airpay.co.in/airpay/pay/v4/api/oauth2/token.php";
 var now = new Date();
 const key = crypto.createHash('md5').update(username + "~:~" + password).digest('hex');
@@ -79,7 +81,7 @@ function encrypt(request, secretKey) {
   }
 
   async function sendPostData(tokenUrl, postData) {
-    // console.log(">>>>>>>>>>>>>>>>>>>>>>>", tokenUrl, postData)
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>", tokenUrl, postData)
     //process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
     try {
@@ -90,7 +92,7 @@ function encrypt(request, secretKey) {
             },
             body: new URLSearchParams(postData),
         });
-       // console.log("<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", response)
+       console.log("<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", response)
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -248,7 +250,7 @@ if (match) {
 let tokenResponse = match;
 let token = JSON.parse("{" + nestedObjectString + "}")
 let accesstoken = token.data.access_token;
-var URL = 'https://payments.airpay.co.in/pay/v4/index.php';
+// var URL = 'https://payments.airpay.co.in/pay/v4/index.php';
 URL = URL + '?token='+ encodeURIComponent(accesstoken);
 console.log(URL);
 

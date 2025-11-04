@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Crown, Check, ArrowLeft } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const BACKEND_URL = `${API_BASE_URL}/sendtoairpay`;
 
 const Subscription = () => {
