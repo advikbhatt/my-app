@@ -11,14 +11,27 @@ import { ArrowLeft, FileText, Loader2 } from "lucide-react";
 const HealthReport = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState<string | null>(null);
+  const [report, setReport] = useState<any>(null);
+  const [followUpQuestions, setFollowUpQuestions] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     age: "",
-    weight: "",
-    height: "",
     gender: "male",
-    activityLevel: "moderate",
-    healthConcerns: "",
+    smokingStatus: "never",
+    cigarettesPerDay: "",
+    hoursOutsidePerDay: "",
+    maskUsage: "sometimes",
+    occupation: "",
+    exerciseMinutesPerWeek: "",
+    comorbidities: "",
+  });
+
+  // You can auto-load location or pollution data later if you want.
+  const [pollutionData, setPollutionData] = useState({
+    regionName: "Kolkata, India",
+    aqi: 165,
+    pollutants: { pm25: 95, pm10: 120, no2: 48 },
+    timestamp: new Date().toISOString(),
+    source: "local-monitoring",
   });
 
   useEffect(() => {
@@ -33,16 +46,20 @@ const HealthReport = () => {
     }
 
     const { data } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id)
-      .eq('role', 'premium')
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", session.user.id)
+      .eq("role", "premium")
       .maybeSingle();
 
     if (!data) {
       toast.error("Premium subscription required");
       navigate("/subscription");
     }
+  };
+
+  const handleChange = (key: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   const generateReport = async (e: React.FormEvent) => {
@@ -53,21 +70,72 @@ const HealthReport = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const { data, error } = await supabase.functions.invoke('generate-health-report', {
-        body: { userInfo: formData }
+      const { data, error } = await supabase.functions.invoke("generate-health-report", {
+        body: {
+          pollutionData,
+          userData: {
+            ...formData,
+            age: parseInt(formData.age),
+            hoursOutsidePerDay: parseFloat(formData.hoursOutsidePerDay),
+            cigarettesPerDay: parseInt(formData.cigarettesPerDay || "0"),
+            comorbidities: formData.comorbidities
+              ? formData.comorbidities.split(",").map((s) => s.trim())
+              : [],
+          },
+        },
       });
 
       if (error) throw error;
 
-      setReport(data.report);
-      toast.success("Health report generated!");
+      if (data.status === "needs_more_data") {
+        setFollowUpQuestions(data.questions);
+        toast("We need a few more details.");
+      } else if (data.status === "ok") {
+        setReport(data.parsedReport || data.assistantText);
+        toast.success("Health report generated!");
+      } else {
+        toast.error("Unexpected response from the server");
+      }
     } catch (error: any) {
-      console.error('Error generating report:', error);
+      console.error("Error generating report:", error);
       toast.error(error.message || "Failed to generate report");
     } finally {
       setLoading(false);
     }
   };
+
+  const renderQuestionInputs = () => (
+    <div className="space-y-4">
+      {followUpQuestions.map((q) => (
+        <div key={q.key} className="space-y-2">
+          <Label>{q.question}</Label>
+          {q.type === "number" ? (
+            <Input
+              type="number"
+              value={(formData as any)[q.key] || ""}
+              onChange={(e) => handleChange(q.key, e.target.value)}
+            />
+          ) : (
+            <Input
+              type="text"
+              value={(formData as any)[q.key] || ""}
+              onChange={(e) => handleChange(q.key, e.target.value)}
+            />
+          )}
+        </div>
+      ))}
+      <Button
+        onClick={() => {
+          setFollowUpQuestions([]);
+          generateReport(new Event("submit") as any);
+        }}
+        variant="premium"
+        className="w-full mt-4"
+      >
+        Continue
+      </Button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,106 +157,150 @@ const HealthReport = () => {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-foreground">Generate Your Health Report</h2>
-                <p className="text-muted-foreground">Powered by AI for personalized insights</p>
+                <p className="text-muted-foreground">
+                  Personalized environmental health assessment
+                </p>
               </div>
             </div>
 
             <form onSubmit={generateReport} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="age">Age</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    placeholder="25"
-                    value={formData.age}
-                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    required
-                    min="1"
-                    max="120"
-                  />
-                </div>
+              {followUpQuestions.length > 0 ? (
+                renderQuestionInputs()
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="age">Age</Label>
+                      <Input
+                        id="age"
+                        type="number"
+                        placeholder="25"
+                        value={formData.age}
+                        onChange={(e) => handleChange("age", e.target.value)}
+                        required
+                        min="1"
+                        max="120"
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
-                  <select
-                    id="gender"
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                    <div className="space-y-2">
+                      <Label htmlFor="gender">Gender</Label>
+                      <select
+                        id="gender"
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                        value={formData.gender}
+                        onChange={(e) => handleChange("gender", e.target.value)}
+                      >
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="smokingStatus">Smoking Status</Label>
+                      <select
+                        id="smokingStatus"
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                        value={formData.smokingStatus}
+                        onChange={(e) => handleChange("smokingStatus", e.target.value)}
+                      >
+                        <option value="never">Never</option>
+                        <option value="former">Former</option>
+                        <option value="current">Current</option>
+                      </select>
+                    </div>
+
+                    {formData.smokingStatus === "current" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="cigarettesPerDay">Cigarettes per day</Label>
+                        <Input
+                          id="cigarettesPerDay"
+                          type="number"
+                          placeholder="5"
+                          value={formData.cigarettesPerDay}
+                          onChange={(e) => handleChange("cigarettesPerDay", e.target.value)}
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="hoursOutsidePerDay">Hours Outside per Day</Label>
+                      <Input
+                        id="hoursOutsidePerDay"
+                        type="number"
+                        placeholder="2"
+                        value={formData.hoursOutsidePerDay}
+                        onChange={(e) => handleChange("hoursOutsidePerDay", e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="maskUsage">Mask Usage</Label>
+                      <select
+                        id="maskUsage"
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                        value={formData.maskUsage}
+                        onChange={(e) => handleChange("maskUsage", e.target.value)}
+                      >
+                        <option value="never">Never</option>
+                        <option value="sometimes">Sometimes</option>
+                        <option value="always">Always</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="occupation">Occupation</Label>
+                      <Input
+                        id="occupation"
+                        type="text"
+                        placeholder="Software Engineer"
+                        value={formData.occupation}
+                        onChange={(e) => handleChange("occupation", e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="exerciseMinutesPerWeek">Exercise Minutes per Week</Label>
+                      <Input
+                        id="exerciseMinutesPerWeek"
+                        type="number"
+                        placeholder="120"
+                        value={formData.exerciseMinutesPerWeek}
+                        onChange={(e) => handleChange("exerciseMinutesPerWeek", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="comorbidities">Comorbidities (comma separated)</Label>
+                    <Input
+                      id="comorbidities"
+                      type="text"
+                      placeholder="Asthma, Hypertension"
+                      value={formData.comorbidities}
+                      onChange={(e) => handleChange("comorbidities", e.target.value)}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="premium"
+                    size="lg"
+                    className="w-full"
+                    disabled={loading}
                   >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Weight (kg)</Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    placeholder="70"
-                    value={formData.weight}
-                    onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                    required
-                    min="20"
-                    max="300"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="height">Height (cm)</Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    placeholder="170"
-                    value={formData.height}
-                    onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                    required
-                    min="50"
-                    max="250"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="activityLevel">Activity Level</Label>
-                <select
-                  id="activityLevel"
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                  value={formData.activityLevel}
-                  onChange={(e) => setFormData({ ...formData, activityLevel: e.target.value })}
-                >
-                  <option value="sedentary">Sedentary (little to no exercise)</option>
-                  <option value="light">Light (exercise 1-3 days/week)</option>
-                  <option value="moderate">Moderate (exercise 3-5 days/week)</option>
-                  <option value="active">Active (exercise 6-7 days/week)</option>
-                  <option value="very-active">Very Active (intense exercise daily)</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="healthConcerns">Health Concerns (optional)</Label>
-                <textarea
-                  id="healthConcerns"
-                  className="w-full min-h-24 px-3 py-2 rounded-md border border-input bg-background"
-                  placeholder="Any specific health concerns, goals, or conditions..."
-                  value={formData.healthConcerns}
-                  onChange={(e) => setFormData({ ...formData, healthConcerns: e.target.value })}
-                />
-              </div>
-
-              <Button type="submit" variant="premium" size="lg" className="w-full" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Generating Report...
-                  </>
-                ) : (
-                  "Generate Health Report"
-                )}
-              </Button>
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating Report...
+                      </>
+                    ) : (
+                      "Generate Health Report"
+                    )}
+                  </Button>
+                </>
+              )}
             </form>
           </Card>
         ) : (
@@ -210,7 +322,9 @@ const HealthReport = () => {
 
             <div className="prose prose-slate max-w-none">
               <div className="whitespace-pre-wrap text-foreground leading-relaxed">
-                {report}
+                {typeof report === "object"
+                  ? JSON.stringify(report, null, 2)
+                  : report}
               </div>
             </div>
           </Card>

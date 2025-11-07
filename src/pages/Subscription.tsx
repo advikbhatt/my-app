@@ -8,7 +8,7 @@ import { Crown, Check, ArrowLeft } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-const BACKEND_URL = `${API_BASE_URL}/sendtoairpay`;
+const BACKEND_URL = `${API_BASE_URL}/txn`;
 
 const Subscription = () => {
   const navigate = useNavigate();
@@ -30,6 +30,23 @@ const initiatePayment = async () => {
     const orderId = `ORD-${Date.now()}`;
     const amount = 85;
 
+    // Insert pending subscription entry
+    const { error: insertError } = await supabase.from("subscriptions").insert([
+      {
+        user_id: user.id,
+        plan_id: "premium_plan",
+        amount,
+        currency: "INR",
+        orderid: orderId,
+        status: "pending",
+      },
+    ]);
+
+    if (insertError) {
+      console.error("Failed to create subscription record:", insertError);
+      throw new Error("Could not start subscription. Try again.");
+    }
+
     const fullName = user.user_metadata?.full_name || "John Doe";
     const [firstName, ...lastNameParts] = fullName.split(" ");
     const lastName = lastNameParts.join(" ") || "Doe";
@@ -41,6 +58,7 @@ const initiatePayment = async () => {
     const phone = user.user_metadata?.phone || "";
     const pin = user.user_metadata?.pincode || "";
 
+    // Call your backend AirPay API route
     const response = await fetch(BACKEND_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -68,6 +86,7 @@ const initiatePayment = async () => {
       throw new Error("Payment server returned an error");
     }
 
+    // open AirPay payment form
     const newWindow = window.open("", "_blank");
     if (newWindow) {
       newWindow.document.write(html);
