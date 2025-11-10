@@ -3,17 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/Button Variants";
 import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
 import { Crown, Check, ArrowLeft } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-const BACKEND_URL = `${API_BASE_URL}`;
+const BACKEND_URL = "https://my-app-76fv.onrender.com/txn";
 
 const Subscription = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -22,43 +19,8 @@ const Subscription = () => {
     });
   }, [navigate]);
 
-  const initiatePayment = async () => {
-    if (!user || processing) return;
-    setProcessing(true);
-
-    try {
-      const orderId = `ORD-${Date.now()}`;
-      const amount = 85;
-
-      await fetch(`${BACKEND_URL}/txn`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: user.id,
-          plan_id: "premium_plan",
-          amount: 85,
-          currency: "INR",
-          orderid: orderId,
-          status: "pending",
-          email: user.email,
-        }),
-      });
-
-
-      const params = new URLSearchParams({
-        email: user.email || "",
-        orderid: orderId,
-        amount: amount.toString(),
-      });
-
-      // Redirect the user to your backend page (on Render)
-      window.location.href = `${BACKEND_URL}?${params.toString()}`;
-
-    } catch (error: any) {
-      console.error("Payment initiation error:", error);
-      toast.error(error.message || "Payment failed to start");
-      setProcessing(false);
-    }
+  const initiatePayment = () => {
+    window.location.href = BACKEND_URL;
   };
 
   const features = [
@@ -73,7 +35,6 @@ const Subscription = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card shadow-soft">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
@@ -83,14 +44,15 @@ const Subscription = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-12 flex justify-center">
         <Card className="max-w-2xl w-full p-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-premium rounded-3xl mb-6">
               <Crown className="w-10 h-10 text-premium-foreground" />
             </div>
-            <h2 className="text-4xl font-bold text-foreground mb-2">Premium Membership</h2>
+            <h2 className="text-4xl font-bold text-foreground mb-2">
+              Premium Membership
+            </h2>
             <p className="text-lg text-muted-foreground">
               Unlock personalized health insights powered by AI
             </p>
@@ -103,7 +65,9 @@ const Subscription = () => {
           </div>
 
           <div className="space-y-4 mb-8">
-            <h3 className="font-semibold text-lg text-foreground mb-4">What you'll get:</h3>
+            <h3 className="font-semibold text-lg text-foreground mb-4">
+              What you'll get:
+            </h3>
             {features.map((feature, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 bg-secondary-light rounded-full flex items-center justify-center flex-shrink-0">
@@ -119,9 +83,8 @@ const Subscription = () => {
             size="xl"
             className="w-full"
             onClick={initiatePayment}
-            disabled={processing}
           >
-            {processing ? "Processing..." : "Subscribe Now"}
+            Subscribe Now
           </Button>
 
           <p className="text-sm text-muted-foreground text-center mt-6">
