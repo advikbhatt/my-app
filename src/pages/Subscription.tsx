@@ -8,7 +8,7 @@ import { Crown, Check, ArrowLeft } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-const BACKEND_URL = `${API_BASE_URL}/txn`;
+const BACKEND_URL = `${API_BASE_URL}`;
 
 const Subscription = () => {
   const navigate = useNavigate();
@@ -22,89 +22,44 @@ const Subscription = () => {
     });
   }, [navigate]);
 
-const initiatePayment = async () => {
-  if (!user || processing) return;
-  setProcessing(true);
+  const initiatePayment = async () => {
+    if (!user || processing) return;
+    setProcessing(true);
 
-  try {
-    const orderId = `ORD-${Date.now()}`;
-    const amount = 85;
+    try {
+      const orderId = `ORD-${Date.now()}`;
+      const amount = 85;
 
-    // Insert pending subscription entry
-    const { error: insertError } = await supabase.from("subscriptions").insert([
-      {
-        user_id: user.id,
-        plan_id: "premium_plan",
-        amount,
-        currency: "INR",
+      await fetch(`${BACKEND_URL}/txn`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          plan_id: "premium_plan",
+          amount: 85,
+          currency: "INR",
+          orderid: orderId,
+          status: "pending",
+          email: user.email,
+        }),
+      });
+
+
+      const params = new URLSearchParams({
+        email: user.email || "",
         orderid: orderId,
-        status: "pending",
-      },
-    ]);
+        amount: amount.toString(),
+      });
 
-    if (insertError) {
-      console.error("Failed to create subscription record:", insertError);
-      throw new Error("Could not start subscription. Try again.");
+      // Redirect the user to your backend page (on Render)
+      window.location.href = `${BACKEND_URL}?${params.toString()}`;
+
+    } catch (error: any) {
+      console.error("Payment initiation error:", error);
+      toast.error(error.message || "Payment failed to start");
+      setProcessing(false);
     }
-
-    const fullName = user.user_metadata?.full_name || "John Doe";
-    const [firstName, ...lastNameParts] = fullName.split(" ");
-    const lastName = lastNameParts.join(" ") || "Doe";
-
-    const address = user.user_metadata?.address || "";
-    const city = user.user_metadata?.city || "";
-    const state = user.user_metadata?.state || "";
-    const country = user.user_metadata?.country || "India";
-    const phone = user.user_metadata?.phone || "";
-    const pin = user.user_metadata?.pincode || "";
-
-    // Call your backend AirPay API route
-    const response = await fetch(BACKEND_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        buyerEmail: user.email,
-        buyerFirstName: firstName,
-        buyerLastName: lastName,
-        buyerAddress: address,
-        buyerCity: city,
-        buyerState: state,
-        buyerCountry: country,
-        buyerPhone: phone,
-        buyerPinCode: pin,
-        amount,
-        orderid: orderId,
-        currency: "INR",
-        isocurrency: "INR",
-      }),
-    });
-
-    const html = await response.text();
-
-    if (!response.ok) {
-      console.error("Payment server returned an error:", html);
-      throw new Error("Payment server returned an error");
-    }
-
-    // open AirPay payment form
-    const newWindow = window.open("", "_blank");
-    if (newWindow) {
-      newWindow.document.write(html);
-      newWindow.document.close();
-    } else {
-      const blob = new Blob([html], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      window.location.href = url;
-    }
-
-    setProcessing(false);
-  } catch (error: any) {
-    console.error("Payment initiation error:", error);
-    toast.error(error.message || "Payment failed to start");
-    setProcessing(false);
-  }
-};
-
+  };
 
   const features = [
     "Personalized AI health reports",
