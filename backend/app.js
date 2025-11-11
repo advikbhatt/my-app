@@ -13,21 +13,23 @@ var app = express();
 app.use(
   cors({
     origin: [
-      "http://childsafeenvirons.com",        
-      "https://childsafeenvirons.com"        
+      "http://localhost:8080",             
+      "http://childsafeenvirons.com",     
+      "https://childsafeenvirons.com",      
+      "https://my-app-76fv.onrender.com",  
     ],
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "OPTIONS"],    
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,                     
   })
 );
 
-// Middleware
+app.options("*", cors());
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
-
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
-
 app.use(logger('dev'));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -38,11 +40,8 @@ app.use('/users', usersRouter);
 app.post('/airpay/ipn', (req, res) => {
   try {
     console.log('💳 Received Airpay IPN:', req.body);
-
     const { TRANSACTIONID, STATUS, AMOUNT } = req.body;
-
     console.log(`Transaction ${TRANSACTIONID} => ${STATUS} (₹${AMOUNT})`);
-
     res.status(200).send('IPN received successfully');
   } catch (error) {
     console.error('IPN processing error:', error);
@@ -58,7 +57,6 @@ app.get('/airpay/failure', (req, res) => {
   res.redirect('http://childsafeenvirons.com/payment-status?status=FAILED');
 });
 
-// Catch 404 and error handler
 app.use(function (req, res, next) {
   next(createError(404));
 });

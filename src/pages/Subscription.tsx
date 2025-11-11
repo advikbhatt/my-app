@@ -1,110 +1,76 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/Button Variants";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Crown, Check, ArrowLeft } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const BACKEND_URL = `${API_BASE_URL}/txn`;
 
 const Subscription = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
   const [processing, setProcessing] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/auth");
-      else setUser(session.user);
-    });
-  }, [navigate]);
+  const initiatePayment = async () => {
+    if (processing) return;
+    setProcessing(true);
 
-const initiatePayment = async () => {
-  if (!user || processing) return;
-  setProcessing(true);
+    try {
+      const orderId = `ORD-${Date.now()}`;
+      const amount = 85;
 
-  try {
-    const orderId = `ORD-${Date.now()}`;
-    const amount = 85;
+      // For demo / non-auth flow — use placeholder buyer details
+      const buyerEmail = "testuser@example.com";
+      const buyerFirstName = "John";
+      const buyerLastName = "Doe";
+      const buyerAddress = "123 Demo Street";
+      const buyerCity = "Mumbai";
+      const buyerState = "Maharashtra";
+      const buyerCountry = "India";
+      const buyerPhone = "9876543210";
+      const buyerPinCode = "400001";
 
-    // Insert pending subscription entry
-    const { error: insertError } = await supabase.from("subscriptions").insert([
-      {
-        user_id: user.id,
-        plan_id: "premium_plan",
-        amount,
-        currency: "INR",
-        orderid: orderId,
-        status: "pending",
-      },
-    ]);
+      // Call backend AirPay API route
+      const response = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          buyerEmail,
+          buyerFirstName,
+          buyerLastName,
+          buyerAddress,
+          buyerCity,
+          buyerState,
+          buyerCountry,
+          buyerPhone,
+          buyerPinCode,
+          amount,
+          orderid: orderId,
+          currency: "INR",
+          isocurrency: "INR",
+        }),
+      });
 
-    if (insertError) {
-      console.error("Failed to create subscription record:", insertError);
-      throw new Error("Could not start subscription. Try again.");
+      const html = await response.text();
+
+      if (!response.ok) {
+        console.error("Payment server returned an error:", html);
+        throw new Error("Payment server returned an error");
+      }
+
+      // ✅ Render the AirPay payment form directly
+      document.open();
+      document.write(html);
+      document.close();
+
+      setProcessing(false);
+    } catch (error: any) {
+      console.error("Payment initiation error:", error);
+      toast.error(error.message || "Payment failed to start");
+      setProcessing(false);
     }
-
-    const fullName = user.user_metadata?.full_name || "John Doe";
-    const [firstName, ...lastNameParts] = fullName.split(" ");
-    const lastName = lastNameParts.join(" ") || "Doe";
-
-    const address = user.user_metadata?.address || "";
-    const city = user.user_metadata?.city || "";
-    const state = user.user_metadata?.state || "";
-    const country = user.user_metadata?.country || "India";
-    const phone = user.user_metadata?.phone || "";
-    const pin = user.user_metadata?.pincode || "";
-
-    // Call your backend AirPay API route
-    const response = await fetch(BACKEND_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        buyerEmail: user.email,
-        buyerFirstName: firstName,
-        buyerLastName: lastName,
-        buyerAddress: address,
-        buyerCity: city,
-        buyerState: state,
-        buyerCountry: country,
-        buyerPhone: phone,
-        buyerPinCode: pin,
-        amount,
-        orderid: orderId,
-        currency: "INR",
-        isocurrency: "INR",
-      }),
-    });
-
-    const html = await response.text();
-
-    if (!response.ok) {
-      console.error("Payment server returned an error:", html);
-      throw new Error("Payment server returned an error");
-    }
-
-    // open AirPay payment form
-    const newWindow = window.open("", "_blank");
-    if (newWindow) {
-      newWindow.document.write(html);
-      newWindow.document.close();
-    } else {
-      const blob = new Blob([html], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      window.location.href = url;
-    }
-
-    setProcessing(false);
-  } catch (error: any) {
-    console.error("Payment initiation error:", error);
-    toast.error(error.message || "Payment failed to start");
-    setProcessing(false);
-  }
-};
-
+  };
 
   const features = [
     "Personalized AI health reports",
@@ -135,7 +101,9 @@ const initiatePayment = async () => {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-premium rounded-3xl mb-6">
               <Crown className="w-10 h-10 text-premium-foreground" />
             </div>
-            <h2 className="text-4xl font-bold text-foreground mb-2">Premium Membership</h2>
+            <h2 className="text-4xl font-bold text-foreground mb-2">
+              Premium Membership
+            </h2>
             <p className="text-lg text-muted-foreground">
               Unlock personalized health insights powered by AI
             </p>
@@ -148,7 +116,9 @@ const initiatePayment = async () => {
           </div>
 
           <div className="space-y-4 mb-8">
-            <h3 className="font-semibold text-lg text-foreground mb-4">What you'll get:</h3>
+            <h3 className="font-semibold text-lg text-foreground mb-4">
+              What you'll get:
+            </h3>
             {features.map((feature, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 bg-secondary-light rounded-full flex items-center justify-center flex-shrink-0">
