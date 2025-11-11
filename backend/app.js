@@ -17,14 +17,13 @@ const supabase = createClient(
 
 const app = express();
 
-/* ----------------------------- CORS CONFIG ----------------------------- */
 app.use(
   cors({
     origin: [
-      "http://localhost:8080",              // Local development
-      "http://childsafeenvirons.com",       // Production (HTTP)
-      "https://childsafeenvirons.com",      // Production (HTTPS)
-      "https://my-app-76fv.onrender.com",   // Backend domain
+      "http://localhost:8080",             
+      "http://childsafeenvirons.com",       
+      "https://childsafeenvirons.com",      
+      "https://my-app-76fv.onrender.com",
     ],
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -32,25 +31,20 @@ app.use(
   })
 );
 
-// Handle preflight requests
 app.options("*", cors());
 
-/* ----------------------------- MIDDLEWARES ----------------------------- */
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(logger("dev"));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-/* ----------------------------- VIEWS ----------------------------- */
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
-/* ----------------------------- ROUTES ----------------------------- */
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
-/* ----------------------------- AIRPAY CALLBACKS ----------------------------- */
 
 app.post("/airpay/ipn", async (req, res) => {
   try {
@@ -95,32 +89,22 @@ app.post("/airpay/ipn", async (req, res) => {
 });
 
 
-/**
- * ✅ Payment success redirect
- * Redirects user to frontend with a success query parameter.
- */
 app.get("/airpay/success", (req, res) => {
   console.log("✅ Payment success redirect triggered");
   res.redirect("http://childsafeenvirons.com/payment-status?status=SUCCESS");
 });
 
-/**
- * ✅ Payment failure redirect
- * Redirects user to frontend with a failed query parameter.
- */
+
 app.get("/airpay/failure", (req, res) => {
   console.log("❌ Payment failure redirect triggered");
   res.redirect("http://childsafeenvirons.com/payment-status?status=FAILED");
 });
 
-/* ----------------------------- ERROR HANDLING ----------------------------- */
 
-// 404 handler
 app.use((req, res, next) => {
   next(createError(404));
 });
 
-// Global error handler
 app.use((err, req, res, next) => {
   console.error("Error:", err.message);
   res.locals.message = err.message;
